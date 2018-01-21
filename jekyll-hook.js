@@ -40,17 +40,23 @@ app.use(express.bodyParser({
 app.post('/hooks/jekyll/*', function(req, res) {
     // Close connection
     res.send(202);
+    console.log(config)
 
     // Queue request handler
     tasks.defer(function(req, res, cb) {
-        var data = req.body;
+        // var data = req.body;
+        var data = JSON.parse(req.body.payload)
         var branch = req.params[0];
         var params = [];
+
+        console.log('data is ' + data + ', branch is ' + branch + '.');
 
         // Parse webhook data for internal variables
         data.repo = data.repository.name;
         data.branch = data.ref.replace('refs/heads/', '');
         data.owner = data.repository.owner.name;
+
+        console.log('data.repo is ' + data.repo + ', data.branch is ' + data.branch + ', data.owner is ' + data.owner + '.');
 
         // End early if not permitted account
         if (config.accounts.indexOf(data.owner) === -1) {
@@ -61,7 +67,7 @@ app.post('/hooks/jekyll/*', function(req, res) {
 
         // End early if not permitted branch
         branchArray = data.ref.split("/")
-        if (branchArray[branchArray.length - 1] !== branch.substring(1, branch.length)) {
+        if (branchArray[branchArray.length - 1] !== branch.substring(0, branch.length)) {
             console.log('Not ' + branch + ' branch.');
             if (typeof cb === 'function') cb();
             return;
@@ -81,6 +87,8 @@ app.post('/hooks/jekyll/*', function(req, res) {
 
         /* source */ params.push(config.temp + '/' + data.owner + '/' + data.repo + '/' + data.branch + '/' + 'code');
         /* build  */ params.push(config.temp + '/' + data.owner + '/' + data.repo + '/' + data.branch + '/' + 'site');
+
+        console.log("params is " + params);
 
         // Script by branch.
         var build_script = null;
