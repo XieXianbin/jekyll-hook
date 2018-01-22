@@ -26,5 +26,12 @@ cd -
 # Run jekyll
 cd $source
 [ -f Gemfile ] && (bundle check || bundle install)
-jekyll build -s $source -d $build
+bundle exec jekyll build -s $source -d $build
 cd -
+
+# configure and restart/reload nginx
+if [[ ! -f "/etc/nginx/sites-enabled/$repo.conf" ]]; then
+  cp /root/REPO_NAME_GITHUB_IO.conf /etc/nginx/sites-enabled/$repo.conf
+  sed "s/REPO_NAME_GITHUB_IO/${$repo}/g" -i /etc/nginx/sites-enabled/$repo.conf
+  service nginx restart
+fi

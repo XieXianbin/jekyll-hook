@@ -8,6 +8,7 @@ var queue   = require('queue-async');
 var tasks   = queue(1);
 var spawn   = require('child_process').spawn;
 var email   = require('emailjs/email');
+// https://www.npmjs.com/package/emailjs#emailserverconnectoptions
 var mailer  = email.server.connect(config.email);
 var crypto  = require('crypto');
 
