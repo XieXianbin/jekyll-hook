@@ -31,7 +31,7 @@ cd -
 
 # configure and restart/reload nginx
 if [[ ! -f "/etc/nginx/conf.d/$repo.conf" ]]; then
-  cp /root/REPO_NAME_GITHUB_IO.conf /etc/nginx/conf.d/$repo.conf
-  sed "s/REPO_NAME_GITHUB_IO/${$repo}/g" -i /etc/nginx/conf.d/$repo.conf
+  cp -rf /root/REPO_NAME_GITHUB_IO.conf /etc/nginx/conf.d/$repo.conf
+  sed -i "s/REPO_NAME_GITHUB_IO/${repo}/g" /etc/nginx/conf.d/$repo.conf
   service nginx restart
 fi
