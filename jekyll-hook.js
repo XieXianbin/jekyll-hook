@@ -50,7 +50,7 @@ app.post('/hooks/jekyll/*', function(req, res) {
         var branch = req.params[0];
         var params = [];
 
-        console.log('data is ' + data + ', branch is ' + branch + '.');
+        // console.log('data is ' + JSON.stringify(data, null, 2) + ', branch is ' + branch + '.');
 
         // Parse webhook data for internal variables
         data.repo = data.repository.name;
@@ -89,7 +89,8 @@ app.post('/hooks/jekyll/*', function(req, res) {
         /* source */ params.push(config.temp + '/' + data.owner + '/' + data.repo + '/' + data.branch + '/' + 'code');
         /* build  */ params.push(config.temp + '/' + data.owner + '/' + data.repo + '/' + data.branch + '/' + 'site');
 
-        console.log("params is " + params);
+        var build_info = '\r\nparams: \r\n' + JSON.stringify(params, null, 2) + '\r\nGitHub Payload: \r\n' + JSON.stringify(data, null, 2)
+        console.log(build_info);
 
         // Script by branch.
         var build_script = null;
@@ -122,7 +123,7 @@ app.post('/hooks/jekyll/*', function(req, res) {
         run(build_script, params, function(err) {
             if (err) {
                 console.log('Failed to build: ' + data.owner + '/' + data.repo);
-                send('Your website at ' + data.owner + '/' + data.repo + ' failed to build.', 'Error building site', data);
+                send('Your website at ' + data.owner + '/' + data.repo + ' failed to build.' + build_info, 'Error building site', data);
 
                 if (typeof cb === 'function') cb();
                 return;
@@ -132,7 +133,7 @@ app.post('/hooks/jekyll/*', function(req, res) {
             run(publish_script, params, function(err) {
                 if (err) {
                     console.log('Failed to publish: ' + data.owner + '/' + data.repo);
-                    send('Your website at ' + data.owner + '/' + data.repo + ' failed to publish.', 'Error publishing site', data);
+                    send('Your website at ' + data.owner + '/' + data.repo + ' failed to publish.' + build_info, 'Error publishing site', data);
 
                     if (typeof cb === 'function') cb();
                     return;
@@ -140,7 +141,7 @@ app.post('/hooks/jekyll/*', function(req, res) {
 
                 // Done running scripts
                 console.log('Successfully rendered: ' + data.owner + '/' + data.repo);
-                send('Your website at ' + data.owner + '/' + data.repo + ' was successfully published.', 'Successfully published site', data);
+                send('Your website at ' + data.owner + '/' + data.repo + ' was successfully published.' + build_info, 'Successfully published site', data);
 
                 if (typeof cb === 'function') cb();
                 return;
@@ -152,8 +153,12 @@ app.post('/hooks/jekyll/*', function(req, res) {
 
 // Start server
 var port = process.env.PORT || 8080;
-app.listen(port);
-console.log('Listening on port ' + port);
+var server = app.listen(port, '0.0.0.0', function () {
+  var host = server.address().address
+  var port = server.address().port
+
+  console.log('Listening on address: http://%s:%s', host, port);
+});
 
 function run(file, params, cb) {
     var process = spawn(file, params);
@@ -176,7 +181,8 @@ function send(body, subject, data) {
         var message = {
             text: body,
             from: config.email.user,
-            to: data.pusher.email,
+            to: config.notify_email,
+            cc: data.pusher.email,
             subject: subject
         };
         mailer.send(message, function(err) { if (err) console.warn(err); });

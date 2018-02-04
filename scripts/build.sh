@@ -23,15 +23,20 @@ git checkout $branch
 git pull origin $branch
 cd -
 
+if [ -d /srv/jekyll ]; then
+  chmod a+w /srv/jekyll -R
+fi
+
 # Run jekyll
 cd $source
 [ -f Gemfile ] && (bundle check || bundle install)
+# bundle exec jekyll serve --watch --incremental --port 8080 --host 0.0.0.0 >> website.log &
 bundle exec jekyll build -s $source -d $build
 cd -
 
 # configure and restart/reload nginx
 if [[ ! -f "/etc/nginx/conf.d/$repo.conf" ]]; then
-  cp -rf /root/REPO_NAME_GITHUB_IO.conf /etc/nginx/conf.d/$repo.conf
+  cp -rf /srv/REPO_NAME_GITHUB_IO.conf /etc/nginx/conf.d/$repo.conf
   sed -i "s/REPO_NAME_GITHUB_IO/${repo}/g" /etc/nginx/conf.d/$repo.conf
   service nginx restart
 fi
