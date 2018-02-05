@@ -23,8 +23,8 @@ git checkout $branch
 git pull origin $branch
 cd -
 
-if [ -d /srv/jekyll ]; then
-  chmod a+w /srv/jekyll -R
+if [ -d /srv/sources ]; then
+  chmod a+w /srv/sources -R
 fi
 
 # Run jekyll
